@@ -1,0 +1,24 @@
+{
+    "manifest_version": 3,
+    "name": "BigQuery Cost Control",
+    "description": "Extension that prevents costly queries on BigQuery",
+    "icons": {
+        "16": "images/money-money-16x16.png",
+        "32": "images/money-money-32x32.png",
+        "48": "images/money-money-48x48.png",
+        "128": "images/money-money-128x128.png"
+    },
+    "content_scripts": [
+        {
+          "js": ["scripts/bq-detect.js"],
+          "matches": [
+            "https://console.cloud.google.com/bigquery/*"
+          ]
+        }
+    ],
+    "version": "1.0",
+    "action": {
+      "default_popup": "bq-cost-control.html",
+      "default_icon": "images/money-money-128x128.png"
+    }
+  }
