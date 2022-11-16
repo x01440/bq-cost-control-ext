@@ -6,6 +6,9 @@
 const MAX_QUERY_SIZE = 20; // In MB.
 const NUMBER_REGEX = /[0-9]+\.[0-9]+/
 const UNITS_REGEX = /[MB]|GB/
+const MUTATION_OBSERVER_CONFIG = { attributes: true, childList: true, subtree: true };
+const observers = {}; // {key: {node, observer}}
+let elementCount = 0; // Unique identifier to map elements.
 
 function getSizeOfQuery(statusElement) {
     const childElements = statusElement.children;
@@ -30,20 +33,49 @@ function getSizeOfQuery(statusElement) {
 
 let hasAttachedObserver = false;
 let previousQuerySize = 0;
-function attachObserver() {
-    // Select the node that will be observed for mutations
-    const targetNode = document.querySelector('.query-validation-status');
-    const messageContainer = document.querySelector('.cfc-action-bar-layout-region.cfc-action-bar-section-right');
 
-    if (targetNode && !hasAttachedObserver) {
-        console.log('targetNode', targetNode);
-        const config = { attributes: true, childList: true, subtree: true };
+function findMessageElementsAndAttachObserver() {
+    // Select the nodes that will be observed for mutations.
+    const targetNodes = document.getElementsByClassName('query-validation-status');
+    
+    for (const node of targetNodes) {
+        let skipObserver = false;
+        for (e in observers) {
+            if (observers[e].node === node) {
+                skipObserver = true;
+            }
+        }
+        if (!skipObserver) {
+            elementCount++;
+            attachObserver(node, elementCount);
+        }
+    }
+
+    // Check observers to see if the elements still exist. If not, remove
+    // the observer from the object.
+    let observersToDelete = []; // Keys of observers to delete.
+    for (e in observers) {
+
+    }
+
+    // Reattach observers every 5 seconds to account for queries being run,
+    // new tabs, and the fact that the query message DIV is destroyed on
+    // each query run.
+    console.log('bq$: observer count ' + String(elementCount));
+    console.log('bq$: attached observers, trying again in 5s');
+    setTimeout(findMessageElementsAndAttachObserver, 5000);
+}
+
+function attachObserver(targetNode, elementCount) {
+    if (targetNode) {
+        // console.log('targetNode', targetNode);
 
         const callback = (mutationList, observer) => {
             if (mutationList && mutationList.length > 0) {
                 const sizeOfQuery = getSizeOfQuery(targetNode);
-                console.log('Size of query: ' + String(sizeOfQuery) + ' MB');
+                console.log('bq$: Size of query: ' + String(sizeOfQuery) + ' MB');
                 if (previousQuerySize != sizeOfQuery) {
+                    // TODO: expand this to all of the buttons or match buttons to message DIVs.
                     const button = document.getElementsByClassName('bqui-test-run-query')[0];
                     if (sizeOfQuery > MAX_QUERY_SIZE) {
                         button.disabled = true;
@@ -52,26 +84,19 @@ function attachObserver() {
                     }
                 }
                 previousQuerySize = sizeOfQuery;
-                // Add a closure to grab every tab query status field and
-                // update the mutation listener for each
-                // This can start by disabling all of the buttons.
             }
         };
 
         // Create an observer instance linked to the callback function
         const observer = new MutationObserver(callback);
+        observers[elementCount] = {node: targetNode, observer: observer};
 
         // Start observing the target node for configured mutations
-        observer.observe(targetNode, config);
-        hasAttachedObserver = true;
-    } else {
-        console.log('*** Checking in 5 sec for query status...');
-        setTimeout(attachObserver, 5000);
+        observer.observe(targetNode, MUTATION_OBSERVER_CONFIG);
     }
 }
 
-attachObserver();
-
+findMessageElementsAndAttachObserver()
 
 // How to change an icon.
 //chrome.browserAction.setIcon({path:'images/newicon.png'});
