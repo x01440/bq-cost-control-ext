@@ -7,7 +7,9 @@ const MAX_QUERY_SIZE = 20; // In MB.
 const NUMBER_REGEX = /[0-9]+\.[0-9]+/
 const UNITS_REGEX = /[MB]|GB/
 const MUTATION_OBSERVER_CONFIG = { attributes: true, childList: true, subtree: true };
-const observers = {}; // {key: {node, observer}}
+const QUERY_MESSAGE_DIV_CLASS = 'query-validation-status';
+const QUERY_RUN_BUTTON_CLASS = 'bqui-test-run-query';
+const observers = {}; // {key: {node, observer, button}}
 let elementCount = 0; // Unique identifier to map elements.
 
 function getSizeOfQuery(statusElement) {
@@ -36,7 +38,7 @@ let previousQuerySize = 0;
 
 function findMessageElementsAndAttachObserver() {
     // Select the nodes that will be observed for mutations.
-    const targetNodes = document.getElementsByClassName('query-validation-status');
+    const targetNodes = document.getElementsByClassName(QUERY_MESSAGE_DIV_CLASS);
     
     for (const node of targetNodes) {
         let skipObserver = false;
@@ -69,29 +71,35 @@ function findMessageElementsAndAttachObserver() {
 function attachObserver(targetNode, elementCount) {
     if (targetNode) {
         // console.log('targetNode', targetNode);
+        // Try to get the button associated with the query message.
+        // TODO This is brittle. Try to find a better way.
+        const buttons = targetNode
+            .parentElement
+            .parentElement
+            .parentElement
+            .parentElement
+            .parentElement
+            .getElementsByClassName(QUERY_RUN_BUTTON_CLASS);
+        const runButton = buttons[0];
 
         const callback = (mutationList, observer) => {
             if (mutationList && mutationList.length > 0) {
                 const sizeOfQuery = getSizeOfQuery(targetNode);
                 console.log('bq$: Size of query: ' + String(sizeOfQuery) + ' MB');
                 if (previousQuerySize != sizeOfQuery) {
-                    // TODO: expand this to all of the buttons or match buttons to message DIVs.
-                    const button = document.getElementsByClassName('bqui-test-run-query')[0];
                     if (sizeOfQuery > MAX_QUERY_SIZE) {
-                        button.disabled = true;
+                        runButton.disabled = true;
                     } else {
-                        button.disabled = false;
+                        runButton.disabled = false;
                     }
                 }
                 previousQuerySize = sizeOfQuery;
             }
         };
 
-        // Create an observer instance linked to the callback function
         const observer = new MutationObserver(callback);
+        // Save the observer to eventually remove it to avoid memory leaks.
         observers[elementCount] = {node: targetNode, observer: observer};
-
-        // Start observing the target node for configured mutations
         observer.observe(targetNode, MUTATION_OBSERVER_CONFIG);
     }
 }
@@ -99,8 +107,4 @@ function attachObserver(targetNode, elementCount) {
 findMessageElementsAndAttachObserver()
 
 // How to change an icon.
-//chrome.browserAction.setIcon({path:'images/newicon.png'});
-
-// DIV with query message, may not disappear between queries:
-// div.cfc-action-bar-layout-region.cfc-action-bar-section-right.ng-star-inserted
-
+// chrome.browserAction.setIcon({path:'images/newicon.png'});
