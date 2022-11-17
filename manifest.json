@@ -18,7 +18,7 @@
     ],
     "version": "1.0",
     "action": {
-      "default_popup": "bq-cost-control.html",
+      "default_popup": "index.html",
       "default_icon": "images/money-money-128x128.png"
     }
   }
