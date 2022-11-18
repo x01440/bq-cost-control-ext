@@ -12,6 +12,16 @@ const QUERY_RUN_BUTTON_CLASS = 'bqui-test-run-query';
 const observers = {}; // {key: {node, observer, button}}
 let elementCount = 0; // Unique identifier to map elements.
 
+// Swallow logs if the console isn't available.
+// The extension won't run without the console if it uses the console object.
+const logger = {
+    log: function(message) {
+        if (console) {
+            console.log(message);
+        }
+    }
+}
+
 function getSizeOfQuery(statusElement) {
     const childElements = statusElement.children;
     if (childElements.length > 0 && childElements[1]) {
@@ -63,8 +73,8 @@ function findMessageElementsAndAttachObserver() {
     // Reattach observers every 5 seconds to account for queries being run,
     // new tabs, and the fact that the query message DIV is destroyed on
     // each query run.
-    console.log('bq$: observer count ' + String(elementCount));
-    console.log('bq$: attached observers, trying again in 5s');
+    logger.log('bq$: observer count ' + String(elementCount));
+    logger.log('bq$: attached observers, trying again in 5s');
     setTimeout(findMessageElementsAndAttachObserver, 5000);
 }
 
@@ -85,10 +95,11 @@ function attachObserver(targetNode, elementCount) {
         const callback = (mutationList, observer) => {
             if (mutationList && mutationList.length > 0) {
                 const sizeOfQuery = getSizeOfQuery(targetNode);
-                console.log('bq$: Size of query: ' + String(sizeOfQuery) + ' MB');
+                logger.log('bq$: Size of query: ' + String(sizeOfQuery) + ' MB');
                 if (previousQuerySize != sizeOfQuery) {
                     if (sizeOfQuery > MAX_QUERY_SIZE) {
                         runButton.disabled = true;
+                        chrome.runtime.sendMessage({message: 'invalidQuery'});
                     } else {
                         runButton.disabled = false;
                     }
@@ -104,7 +115,4 @@ function attachObserver(targetNode, elementCount) {
     }
 }
 
-findMessageElementsAndAttachObserver()
-
-// How to change an icon.
-// chrome.browserAction.setIcon({path:'images/newicon.png'});
+findMessageElementsAndAttachObserver();

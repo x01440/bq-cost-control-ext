@@ -8,6 +8,9 @@
         "48": "images/money-money-48x48.png",
         "128": "images/money-money-128x128.png"
     },
+    "background" : {
+      "service_worker": "scripts/bq-detect-worker.js"
+    },
     "content_scripts": [
         {
           "js": ["scripts/bq-detect.js"],
