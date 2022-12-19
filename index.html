@@ -1,6 +1,16 @@
 <html>
-  <body>
-    <h1>BigQuery Cost Manager</h1>
-    This extension prevents queries to be run in the BigQuery console above a certain threshold.
+  <head>
+    <title>Query Cost Control</title>
+  </head>
+  <body> 
+      <h1>BigQuery Cost Control</h1>
+      <img src="images/fivetran-blue-mark-128px.png" id="fivetran-logo">
+      <div id="ft-timer">
+        <div id="ft-timer-status"></div>
+        <div id="ft-timer-time"></div>
+      </div>
+      <br />
+      <button id="pauseButton" value="0.1">Pause 5 minutes</button>
+      <script src="scripts/bq-detect-popup.js"></script>
   </body>
 </html>

@@ -3,7 +3,7 @@
 //   <button>Check mark for query status</button>
 //   <div class='ng-star-inserted'>Query size here</div>
 // </div>
-const MAX_QUERY_SIZE = 20; // In MB.
+const MAX_QUERY_SIZE = 500000 // In MB.
 const NUMBER_REGEX = /[0-9]+\.[0-9]+/
 const UNITS_REGEX = /[MB]|GB/
 const MUTATION_OBSERVER_CONFIG = { attributes: true, childList: true, subtree: true };
