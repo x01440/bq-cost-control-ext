@@ -3,7 +3,7 @@
 //   <button>Check mark for query status</button>
 //   <div class='ng-star-inserted'>Query size here</div>
 // </div>
-const MAX_QUERY_SIZE = 500000 // In MB.
+const MAX_QUERY_SIZE = 1000 // In MB.
 const NUMBER_REGEX = /[0-9]+\.[0-9]+/
 const UNITS_REGEX = /[MB]|GB/
 const MUTATION_OBSERVER_CONFIG = { attributes: true, childList: true, subtree: true };
@@ -116,3 +116,28 @@ function attachObserver(targetNode, elementCount) {
 }
 
 findMessageElementsAndAttachObserver();
+
+// Setup ctrl-enter keypress intercept.
+document.addEventListener('keydown', function (e) {
+    const ctrlKey = e.metaKey;
+    const keyCode = e.code;
+    // Need to check run button on current tab to see if it's enabled or disabled
+    // to decide to execute the query.
+    
+    e.stopPropagation();
+    logger.log(`Pressed key code ${keyCode}, ctrl key ${ctrlKey}, keycode ${e.keyCode}`);
+    if (ctrlKey && keyCode === 'Enter') {
+        let canExecute = true;
+        const runButtons = document.getElementsByClassName(QUERY_RUN_BUTTON_CLASS);
+        // use clientHeight and clientWidth to tell if the current button is active
+        for (b in runButtons) {
+            const button = runButtons[b];
+            if (button.clientHeight > 0 && button.clientWidth > 0 && button.disabled === true) {
+                logger.log('CANNOT run query, button disabled');
+                canExecute = false;
+                e.stopPropagation();
+            }
+        }
+
+    }
+});
