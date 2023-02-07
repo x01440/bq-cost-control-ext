@@ -110,7 +110,7 @@ function attachObserver(targetNode, elementCount) {
                         runButton.disabled = false;
                         runButtonWasDisabled = false;
                         chrome.storage.local.set({
-                            message: `OK: Query of ${sizeOfQuery}MB > ${MAX_QUERY_SIZE}MB`});
+                            message: `OK: Query of ${sizeOfQuery}MB < ${MAX_QUERY_SIZE}MB`});
                     }
                 }
                 previousQuerySize = sizeOfQuery;
