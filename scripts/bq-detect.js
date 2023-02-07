@@ -144,7 +144,7 @@ document.addEventListener('keydown', function (e) {
             if (button.clientHeight > 0 && 
                 button.clientWidth > 0 &&
                 button.disabled === true &&
-                runButtonWasDisabled === false) {
+                runButtonWasDisabled === true) {
                     chrome.runtime.sendMessage({code: 'invalidQuery'});
                     logger.log('CANNOT run query, button disabled');
                     canExecute = false;
