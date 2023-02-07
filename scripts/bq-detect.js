@@ -12,6 +12,8 @@ const QUERY_RUN_BUTTON_CLASS = 'bqui-test-run-query';
 const observers = {}; // {key: {node, observer, button}}
 let elementCount = 0; // Unique identifier to map elements.
 let runButtonWasDisabled = false; // Track if the button is disabled and only enable it when the query is verified.
+let hasAttachedObserver = false;
+let previousQuerySize = 0;
 
 // Swallow logs if the console isn't available.
 // The extension won't run without the console if it uses the console object.
@@ -23,6 +25,13 @@ const logger = {
     }
 }
 
+/**
+ * Parses the size of the query from the message element.
+ * 
+ * @param {Element} statusElement 
+ * 
+ * @returns The size of the query, in MB.
+ */
 function getSizeOfQuery(statusElement) {
     const childElements = statusElement.children;
     if (childElements.length > 0 && childElements[1]) {
@@ -44,9 +53,10 @@ function getSizeOfQuery(statusElement) {
     }
 }
 
-let hasAttachedObserver = false;
-let previousQuerySize = 0;
-
+/**
+ * Finds the message element, attaches the observer to the element, and schedules it to
+ * happen again.
+ */
 function findMessageElementsAndAttachObserver() {
     // Select the nodes that will be observed for mutations.
     const targetNodes = document.getElementsByClassName(QUERY_MESSAGE_DIV_CLASS);
@@ -64,13 +74,6 @@ function findMessageElementsAndAttachObserver() {
         }
     }
 
-    // Check observers to see if the elements still exist. If not, remove
-    // the observer from the object.
-    let observersToDelete = []; // Keys of observers to delete.
-    for (e in observers) {
-
-    }
-
     // Reattach observers every 5 seconds to account for queries being run,
     // new tabs, and the fact that the query message DIV is destroyed on
     // each query run.
@@ -79,20 +82,32 @@ function findMessageElementsAndAttachObserver() {
     setTimeout(findMessageElementsAndAttachObserver, 5000);
 }
 
+/**
+ * Finds and returns the currently active run button.
+ */
+function getRunButton() {
+    // Try to get the button associated with the query message.
+    // TODO This is brittle. Try to find a better way.
+    const buttons = targetNode
+        .parentElement
+        .parentElement
+        .parentElement
+        .parentElement
+        .parentElement
+        .getElementsByClassName(QUERY_RUN_BUTTON_CLASS);
+    return buttons[0];
+}
+
+/**
+ * Attaches an observer to the query size message element to detect changes in prospective query
+ * size.
+ * 
+ * @param {Element} targetNode The message element.
+ * @param {number} elementCount The current count of this element on the page, for indexing.
+ */
 function attachObserver(targetNode, elementCount) {
     if (targetNode) {
-        // console.log('targetNode', targetNode);
-        // Try to get the button associated with the query message.
-        // TODO This is brittle. Try to find a better way.
-        const buttons = targetNode
-            .parentElement
-            .parentElement
-            .parentElement
-            .parentElement
-            .parentElement
-            .getElementsByClassName(QUERY_RUN_BUTTON_CLASS);
-        const runButton = buttons[0];
-
+        const runButton = getRunButton();
         const callback = (mutationList, observer) => {
             if (mutationList && mutationList.length > 0) {
                 const sizeOfQuery = getSizeOfQuery(targetNode);
@@ -122,10 +137,10 @@ function attachObserver(targetNode, elementCount) {
     }
 }
 
+// Disable the run button to start with until a query can be calculated.
+const runButton = getRunButton();
+runButton.disabled = true;
 findMessageElementsAndAttachObserver();
-
-// Remove the existing keyboard listeners.
-
 
 // Setup ctrl-enter keypress intercept.
 document.addEventListener('keydown', function (e) {
@@ -154,6 +169,3 @@ document.addEventListener('keydown', function (e) {
         }
     }
 }, { capture: true });
-
-// Add the existing keyboard listeners back. This extension's must be first to stop propagation
-// if the query about to be executed is too large.
