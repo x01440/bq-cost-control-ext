@@ -141,10 +141,11 @@ document.addEventListener('keydown', function (e) {
         // use clientHeight and clientWidth to tell if the current button is active
         for (b in runButtons) {
             const button = runButtons[b];
-            if (button.clientHeight > 0 && 
+            const isCurrentButtonDisabled =
+                button.clientHeight > 0 && 
                 button.clientWidth > 0 &&
-                button.disabled === true &&
-                runButtonWasDisabled === true) {
+                button.disabled === true;
+            if (isCurrentButtonDisabled || runButtonWasDisabled) {
                     chrome.runtime.sendMessage({code: 'invalidQuery'});
                     logger.log('CANNOT run query, button disabled');
                     canExecute = false;
