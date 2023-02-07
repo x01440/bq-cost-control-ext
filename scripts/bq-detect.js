@@ -103,9 +103,7 @@ function attachObserver(targetNode, elementCount) {
                         runButtonWasDisabled = true;
                         chrome.storage.local.set({
                             message: `TOO LARGE: Query of ${sizeOfQuery}MB > ${MAX_QUERY_SIZE}MB`});
-                        chrome.runtime.sendMessage({
-                            code: 'invalidQuery',
-                            message: `Query of ${sizeOfQuery}MB > ${MAX_QUERY_SIZE}MB`});
+                        chrome.runtime.sendMessage({code: 'invalidQuery'});
                     } else {
                         runButton.disabled = false;
                         runButtonWasDisabled = false;
@@ -147,9 +145,10 @@ document.addEventListener('keydown', function (e) {
                 button.clientWidth > 0 &&
                 button.disabled === true &&
                 runButtonWasDisabled === false) {
-                logger.log('CANNOT run query, button disabled');
-                canExecute = false;
-                e.stopPropagation();
+                    chrome.runtime.sendMessage({code: 'invalidQuery'});
+                    logger.log('CANNOT run query, button disabled');
+                    canExecute = false;
+                    e.stopPropagation();
             }
         }
     }
