@@ -1,4 +1,13 @@
+const messageQueue = [];
 let timerOn = false;
+
+// Show any messages recorded by the extension.
+chrome.storage.local.get(['message']).then((result) => {
+    if (result.message) {
+        document.getElementById('ft-messages').innerText = result.message;
+    }
+});
+
 function startOrEndTimer() {
     timerOn = !timerOn;
     const timerStatusEl = document.getElementById('ft-timer-status');
@@ -12,4 +21,4 @@ function startOrEndTimer() {
     }
 }
 
-document.getElementById('pauseButton').addEventListener('click', startOrEndTimer);
+document.getElementById('pause-button').addEventListener('click', startOrEndTimer);

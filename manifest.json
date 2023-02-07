@@ -11,6 +11,9 @@
     "background" : {
       "service_worker": "scripts/bq-detect-worker.js"
     },
+    "permissions": [
+      "storage"
+    ],
     "content_scripts": [
         {
           "js": ["scripts/bq-detect.js"],

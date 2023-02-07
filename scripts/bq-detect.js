@@ -11,6 +11,7 @@ const QUERY_MESSAGE_DIV_CLASS = 'query-validation-status';
 const QUERY_RUN_BUTTON_CLASS = 'bqui-test-run-query';
 const observers = {}; // {key: {node, observer, button}}
 let elementCount = 0; // Unique identifier to map elements.
+let runButtonWasDisabled = false; // Track if the button is disabled and only enable it when the query is verified.
 
 // Swallow logs if the console isn't available.
 // The extension won't run without the console if it uses the console object.
@@ -99,9 +100,17 @@ function attachObserver(targetNode, elementCount) {
                 if (previousQuerySize != sizeOfQuery) {
                     if (sizeOfQuery > MAX_QUERY_SIZE) {
                         runButton.disabled = true;
-                        chrome.runtime.sendMessage({message: 'invalidQuery'});
+                        runButtonWasDisabled = true;
+                        chrome.storage.local.set({
+                            message: `TOO LARGE: Query of ${sizeOfQuery}MB > ${MAX_QUERY_SIZE}MB`});
+                        chrome.runtime.sendMessage({
+                            code: 'invalidQuery',
+                            message: `Query of ${sizeOfQuery}MB > ${MAX_QUERY_SIZE}MB`});
                     } else {
                         runButton.disabled = false;
+                        runButtonWasDisabled = false;
+                        chrome.storage.local.set({
+                            message: `OK: Query of ${sizeOfQuery}MB > ${MAX_QUERY_SIZE}MB`});
                     }
                 }
                 previousQuerySize = sizeOfQuery;
@@ -117,6 +126,9 @@ function attachObserver(targetNode, elementCount) {
 
 findMessageElementsAndAttachObserver();
 
+// Remove the existing keyboard listeners.
+
+
 // Setup ctrl-enter keypress intercept.
 document.addEventListener('keydown', function (e) {
     const ctrlKey = e.metaKey;
@@ -124,20 +136,24 @@ document.addEventListener('keydown', function (e) {
     // Need to check run button on current tab to see if it's enabled or disabled
     // to decide to execute the query.
     
-    e.stopPropagation();
-    logger.log(`Pressed key code ${keyCode}, ctrl key ${ctrlKey}, keycode ${e.keyCode}`);
+    logger.log(`Pressed key code ${keyCode}, ctrl key ${ctrlKey}`);
     if (ctrlKey && keyCode === 'Enter') {
         let canExecute = true;
         const runButtons = document.getElementsByClassName(QUERY_RUN_BUTTON_CLASS);
         // use clientHeight and clientWidth to tell if the current button is active
         for (b in runButtons) {
             const button = runButtons[b];
-            if (button.clientHeight > 0 && button.clientWidth > 0 && button.disabled === true) {
+            if (button.clientHeight > 0 && 
+                button.clientWidth > 0 &&
+                button.disabled === true &&
+                runButtonWasDisabled === false) {
                 logger.log('CANNOT run query, button disabled');
                 canExecute = false;
                 e.stopPropagation();
             }
         }
-
     }
-});
+}, { capture: true });
+
+// Add the existing keyboard listeners back. This extension's must be first to stop propagation
+// if the query about to be executed is too large.

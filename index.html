@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Query Cost Control</title>
+    <link rel="stylesheet" href="bq-cc.css">
   </head>
   <body> 
       <h1>BigQuery Cost Control</h1>
@@ -10,7 +11,11 @@
         <div id="ft-timer-time"></div>
       </div>
       <br />
-      <button id="pauseButton" value="0.1">Pause 5 minutes</button>
+      <button id="pause-button" value="0.1">Pause 5 minutes</button>
+      <br /> Query Result:
+      <br /><br />
+      <div id="ft-messages">   
+      </div>
       <script src="scripts/bq-detect-popup.js"></script>
   </body>
 </html>

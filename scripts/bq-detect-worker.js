@@ -1,5 +1,5 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.message === "invalidQuery") {
+    if (request.code === "invalidQuery") {
         console.info("Worker received invalid query signal");
         // Temporarily change the icon to a warning.
         chrome.action.setBadgeBackgroundColor(
